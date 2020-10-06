@@ -1,56 +1,37 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Alert, Button, Modal, StyleSheet, View } from "react-native";
 import { TextInput } from "react-native-gesture-handler";
 import axios from "axios";
-
-const patchData = async (passengerId, editedPassengerName) => {
-  try {
-    const response = await axios.patch(
-      `https://api.instantwebtools.net/v1/passenger/${passengerId}`,
-      { name: editedPassengerName }
-    );
-  } catch (err) {
-    Alert.alert("Editing Failed", "Sorry!Something Went Wrong While Editing", [
-      {
-        text: "Close",
-      },
-    ]);
-  }
-};
+import { useDispatch, useSelector } from "react-redux";
+import {
+  changeName,
+  fetchPassengers,
+} from "../actions-reducers/PassengerActions";
 
 export default function ModalInput(props) {
+  const dispatch = useDispatch();
+  const size = useSelector((state) => state.passengers.size);
+  const initialName = props.initialName;
   const passengerId = props.passengerId;
-  const editName = props.editName;
-  const [nameVal, setNameVal] = useState("");
-  const [newName, setNewName] = useState("");
-  useEffect(() => {
-    setNameVal(props.name);
-  }, [props.name]);
+  const [newName, setNewName] = useState(initialName);
 
-  useEffect(() => {
-    if (passengerId) {
-      patchData(passengerId, newName);
-    }
-  }, [newName]);
-
-  const handleAll = () => {
-    setNewName(nameVal);
+  const handleNameChange = () => {
+    dispatch(changeName(passengerId, newName));
+    dispatch(fetchPassengers(size));
     props.onCancel();
-    editName(nameVal);
-    setNameVal(" ");
   };
 
   return (
     <Modal visible={props.isVisible} animationType="slide">
       <View style={styles.container}>
         <TextInput
-          value={nameVal}
+          value={newName}
           style={styles.nameInput}
-          onChangeText={(text) => setNameVal(text)}
+          onChangeText={(text) => setNewName(text)}
         ></TextInput>
         <View style={styles.btnContainer}>
           <Button onPress={props.onCancel} title="Cancel" />
-          <Button title="Edit" onPress={handleAll} />
+          <Button title="Edit" onPress={handleNameChange} />
         </View>
       </View>
     </Modal>

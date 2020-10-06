@@ -6,17 +6,25 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import PassengersScreen from "./screens/PassengersScreen";
 import PassengerDetailsScreen from "./screens/PassengerDetailsScreen";
+import { applyMiddleware, combineReducers, createStore } from "redux";
+import thunk from "redux-thunk";
+import { Provider } from "react-redux";
+import PassengerReducer from "./actions-reducers/PassengerReducer";
+
+const rootReducer = combineReducers({
+  passengers: PassengerReducer,
+});
+
+const store = createStore(rootReducer, applyMiddleware(thunk));
 
 const Stack = createStackNavigator();
 
 export default function App() {
   return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="Passengers">
-        <Stack.Screen
-          name="Passengers"
-          component={PassengersScreen}
-          options={{
+    <Provider store={store}>
+      <NavigationContainer>
+        <Stack.Navigator
+          screenOptions={{
             headerStyle: {
               backgroundColor: "blue",
             },
@@ -25,22 +33,16 @@ export default function App() {
               fontWeight: "bold",
             },
           }}
-        />
-        <Stack.Screen
-          name="PassengerDetails"
-          component={PassengerDetailsScreen}
-          options={{
-            headerStyle: {
-              backgroundColor: "blue",
-            },
-            headerTintColor: "#fff",
-            headerTitleStyle: {
-              fontWeight: "bold",
-            },
-          }}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+          initialRouteName="Passengers"
+        >
+          <Stack.Screen name="Passengers" component={PassengersScreen} />
+          <Stack.Screen
+            name="PassengerDetails"
+            component={PassengerDetailsScreen}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </Provider>
   );
 }
 

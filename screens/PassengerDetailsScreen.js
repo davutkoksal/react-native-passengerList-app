@@ -1,49 +1,35 @@
 import axios from "axios";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Alert, Button, StyleSheet, Text, View } from "react-native";
+import { useDispatch, useSelector } from "react-redux";
 import ModalInput from "../components/ModalInput";
+import {
+  changeName,
+  fetchPassenger,
+  fetchPassengers,
+} from "../actions-reducers/PassengerActions";
 
 export default function PassengerDetailsScreen(props) {
+  const dispatch = useDispatch();
   const [isVisible, setIsvisible] = useState(false);
-  const { passengerId } = props.route.params;
-  const [passengerName, setPassengerName] = useState("");
-  const [passengerTrips, setPassengerTrips] = useState("");
-  const [selectedId, setSelectedId] = useState("");
-  const [editedPassengerName, setEditedPassengerName] = useState("");
+  const { passengerId, size } = props.route.params;
+  const selectedPassenger = useSelector((state) =>
+    state.passengers.passengerList.find((p) => p._id === passengerId)
+  );
+
+  useEffect(() => {
+    dispatch(fetchPassengers(size));
+  }, [dispatch]);
 
   const handleCancelModalVisibility = () => {
     setIsvisible(false);
   };
-
-  useEffect(() => {
-    let source = axios.CancelToken.source();
-    const unsubscribe = async () => {
-      const response = await axios(
-        `https://api.instantwebtools.net/v1/passenger/${passengerId}`,
-        {
-          cancelToken: source.token,
-        }
-      );
-      setPassengerName(response.data.name);
-      setPassengerTrips(response.data.trips);
-      setSelectedId(response.data._id);
-    };
-    unsubscribe();
-    console.log("hi");
-
-    return () => {
-      source.cancel("Cancelling in cleanup");
-    };
-  }, [passengerId, setPassengerName]);
-
-  const editName = (nameVal) => {
-    setPassengerName(nameVal);
-  };
-
   return (
     <View style={styles.container}>
       <View style={styles.edit}>
-        <Text style={styles.text}>Passenger Name : {passengerName}</Text>
+        <Text style={styles.text}>
+          Passenger Name :{selectedPassenger?.name}
+        </Text>
         <Button
           style={styles.btn}
           title="Edit"
@@ -52,16 +38,16 @@ export default function PassengerDetailsScreen(props) {
       </View>
       <View style={styles.trip}>
         <Text style={styles.text}>
-          Passenger's Trips Count : {passengerTrips}
+          Passenger's Trips Count :{selectedPassenger?.trips}
         </Text>
       </View>
-      <ModalInput
-        onCancel={handleCancelModalVisibility}
-        name={passengerName}
-        passengerId={selectedId}
-        isVisible={isVisible}
-        editName={editName}
-      />
+      {isVisible && (
+        <ModalInput
+          onCancel={handleCancelModalVisibility}
+          initialName={selectedPassenger?.name}
+          passengerId={passengerId}
+        />
+      )}
     </View>
   );
 }
